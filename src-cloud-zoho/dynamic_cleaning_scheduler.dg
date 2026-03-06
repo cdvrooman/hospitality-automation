@@ -1,0 +1,48 @@
+/* =========================================================================
+ * ZOHO FLOW CUSTOM FUNCTION: Dynamic Cleaning Scheduler
+ * ========================================================================= */
+
+// INPUTS Mapeados desde Webhook (Smoobu):
+// currentCheckOutDate (string), nextCheckInDate (string), roomId (string)
+
+date checkOut = currentCheckOutDate.toDate("yyyy-MM-dd");
+date scheduledCleanDate;
+string urgencyLevel;
+string staffNotes;
+
+if(nextCheckInDate == "" || nextCheckInDate == null) {
+    // Calendario vacío
+    scheduledCleanDate = checkOut.addDay(1);
+    urgencyLevel = "Normal";
+    staffNotes = "No hay reservas entrantes inmediatas. Limpieza estándar.";
+} else {
+    date checkIn = nextCheckInDate.toDate("yyyy-MM-dd");
+    int gapDays = daysBetween(checkOut, checkIn);
+    
+    if(gapDays == 0) {
+        // Back-to-Back
+        scheduledCleanDate = checkOut;
+        urgencyLevel = "Alta - Crítica";
+        staffNotes = "ATENCIÓN: Back-to-back. Limpiar entre 11:00 AM y 15:00 PM de hoy.";
+    } 
+    else if (gapDays == 1) {
+        // Brecha 1 día
+        scheduledCleanDate = checkOut;
+        urgencyLevel = "Media";
+        staffNotes = "Turnover mañana. Limpiar hoy después del checkout.";
+    }
+    else {
+        // Brecha Larga
+        scheduledCleanDate = checkIn;
+        urgencyLevel = "Normal";
+        staffNotes = "Brecha larga. Limpieza de frescura programada para la mañana del check-in.";
+    }
+}
+
+Map responseMap = Map();
+responseMap.put("Room_ID", roomId);
+responseMap.put("Scheduled_Clean_Date", scheduledCleanDate.toString("yyyy-MM-dd"));
+responseMap.put("Urgency", urgencyLevel);
+responseMap.put("Instructions", staffNotes);
+
+return responseMap;
