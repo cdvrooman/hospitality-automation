@@ -1,14 +1,26 @@
-# Credentials and Secrets
-.env
-*.pem
-*.key
-credentials.json
-secrets.py
+# --- PY4E Course 3 Specifics ---
+# Ignore the data files provided by the course (mbox.txt, romeo.txt, etc.)
+*.txt
+*.csv
+*.json
+*.xml
+*.html
 
-# Python
+# Exceptions (CRITICAL INFRASTRUCTURE & DOCS)
+!README.md
+!*.pdf
+!requirements.txt
+!*mock*.json
+!*payload*.json
+
+# Python clutter (Essential)
 __pycache__/
 *.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
 
-# OS files
+# OS Clutter
 .DS_Store
 Thumbs.db
