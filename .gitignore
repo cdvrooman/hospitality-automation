@@ -1,26 +1,68 @@
-# --- PY4E Course 3 Specifics ---
-# Ignore the data files provided by the course (mbox.txt, romeo.txt, etc.)
-*.txt
-*.csv
-*.json
-*.xml
-*.html
+# --- MY SENSITIVE IDENTITY & CONFIGS ---
+# I'll keep my SmartThings and Zoho keys strictly on my machine.
+.env
+.env.*
+! .env.example
 
-# Exceptions (CRITICAL INFRASTRUCTURE & DOCS)
-!README.md
-!*.pdf
-!requirements.txt
-!*mock*.json
-!*payload*.json
-
-# Python clutter (Essential)
+# --- PYTHON & VIRTUAL ENVS ---
+# No need to track the environment, just the requirements.txt.
 __pycache__/
 *.py[cod]
 *$py.class
 .venv/
 venv/
 ENV/
+env/
+pip-log.txt
 
-# OS Clutter
+# --- BINARIES, EXECUTABLES & ARCHIVES ---
+# I'll keep the raw .zip and .tar.gz files in /archives for offline use,
+# and my compiled binaries in /bin. Both stay out of Git.
+archives/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.7z
+# Removing the old specific Lua folder name to be more generic
+lua-*/
+
+# --- THIRD-PARTY LIBRARIES & REFERENCES ---
+# I'm ignoring the extracted SmartThings API libraries and the 
+# stock driver reference code to keep my repo "pure."
+lua_libs-api_v*/
+ref/
+
+# --- MY DOCUMENTATION & KNOWLEDGE BASE ---
+# 1. Ignore EVERYTHING inside manuals by default
+docs/manuals/**
+!docs/manuals/**/
+
+# 2. Open the door for Research and Manual READMEs
+!docs/research/*.md
+!docs/manuals/**/README.md
+!README.md
+
+# 3. CLOSE the door specifically for drafts (Last pattern wins)
+# This will now correctly override the "!docs/research/*.md" above
+docs/research/*-draft.md
+
+# --- DATA, MOCKS & LOGS ---
+# I'll track my Zoho/Lodgify mock payloads for testing, but 
+# I'm ignoring actual runtime logs and local databases.
+*.log
+local_db.sqlite
+!*mock*.json
+!*payload*.json
+
+# --- OS & IDE TRASH ---
 .DS_Store
+.DS_Store?
+._*
+ehthumbs.db
 Thumbs.db
+.vscode/
+.idea/

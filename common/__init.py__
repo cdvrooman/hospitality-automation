@@ -1,0 +1,47 @@
+"""
+Salta Hospitality Automation - Common Utilities Package
+Centralized constants and environment validation for:
+- Casa Kolla (Property Management & Expansion)
+- Zoho CRM / Deluge / HubSpot STR Club Integration
+- SmartThings Edge / Raspberry Pi Local-First IoT
+"""
+
+import os
+from pathlib import Path
+
+# --- 1. SHARED PROJECT CONSTANTS ---
+# Standardizing these across all Python scripts for consistency
+TIMEZONE = "America/Argentina/Salta"
+PROJECT_NAME = "Hospitality-Automation"
+
+# --- 2. EXPOSED UTILITIES (Simplified Imports) ---
+from .project_paths import get_project_root
+from .database import get_db_cursor
+
+# Defining exports for 'from common import *'
+__all__ = ['get_project_root', 'get_db_cursor', 'TIMEZONE']
+
+
+# --- 3. ENVIRONMENT SANITY CHECKS ---
+# Critical IDs and Keys. Uncomment as they are defined in .env 
+# to prevent scripts from running if the infrastructure is missing.
+
+def _validate_environment():
+    """ Internal check to ensure the environment is ready for automation. """
+    required_keys = [
+        # "ZOHO_CLIENT_ID",
+        # "ZOHO_CLIENT_SECRET",
+        # "HUBSPOT_ACCESS_TOKEN",
+        # "SMARTTHINGS_API_TOKEN",
+        # "CASA_KOLLA_DB_PATH",
+    ]
+    
+    missing = [key for key in required_keys if not os.getenv(key)]
+    
+    if missing:
+        # Using a warning to flag missing cloud/local access 
+        # without killing standalone research scripts.
+        print(f"--- [STATUS] Missing Environment Variables: {', '.join(missing)} ---")
+
+# Run validation immediately upon package import
+_validate_environment()

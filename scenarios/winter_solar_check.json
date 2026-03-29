@@ -1,0 +1,22 @@
+{
+    "scenario_name": "Solar Thermal Validation - Salta Winter",
+    "description": "Scout local 450W panels and perform deep engineering safety checks for high-altitude winter conditions.",
+    "steps": [
+        {
+            "step_id": "market_scout",
+            "agent_key": "flash",
+            "prompt_file": "prompts/solar/scout_panel_specs.md",
+            "params": {
+                "location": "Salta, Argentina"
+            }
+        },
+        {
+            "step_id": "engineering_audit",
+            "use_deep_research": true,
+            "prompt_file": "prompts/solar/architect_thermal_calc.md",
+            "params": {
+                "min_temp": -5
+            }
+        }
+    ]
+}
