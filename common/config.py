@@ -1,28 +1,27 @@
-"""
-Salta Hospitality Automation - Common Utilities Package
-Centralized constants and environment validation for:
-- Casa Kolla (Property Management & Expansion)
-- Zoho CRM / Deluge / HubSpot STR Club Integration
-- SmartThings Edge / Raspberry Pi Local-First IoT
-"""
-
 import os
-from pathlib import Path
 
 # --- 1. SHARED PROJECT CONSTANTS ---
 # Standardizing these across all Python scripts for consistency
 TIMEZONE = "America/Argentina/Salta"
 PROJECT_NAME = "Hospitality-Automation"
 
-# --- 2. EXPOSED UTILITIES (Simplified Imports) ---
-from .project_paths import get_project_root
-from .database import get_db_cursor
+# --- AI TEMPERATURE SETTINGS ---
+# Controls the balance between deterministic logic and creative flow.
+AI_TEMP_PRECISE = 0.2  # Use for: Data extraction, chains, and logic
+AI_TEMP_CREATIVE = 0.7 # Use for: Guest communication and marketing
 
-# Defining exports for 'from common import *'
-__all__ = ['get_project_root', 'get_db_cursor', 'TIMEZONE']
+# --- AI MODEL MAPPING ---
+# Intent-based model selection to allow for easy global upgrades.
+AI_MODELS = {
+    "logic": "gemini-3.1-pro-preview",    # Complex reasoning (Financials/Legal)
+    "speed": "gemini-3-flash-preview",  # Fast response (IoT/Guest FAQs)
+    "vision": "gemini-3-flash-preview", # Image analysis (Property/ID photos)
+}
 
+# --- DATABASE SETTINGS ---
+DEFAULT_DB_NAME = "casa_kolla_management.sqlite"
 
-# --- 3. ENVIRONMENT SANITY CHECKS ---
+# --- 2. ENVIRONMENT SANITY CHECKS ---
 # Critical IDs and Keys. Uncomment as they are defined in .env 
 # to prevent scripts from running if the infrastructure is missing.
 
@@ -43,5 +42,5 @@ def _validate_environment():
         # without killing standalone research scripts.
         print(f"--- [STATUS] Missing Environment Variables: {', '.join(missing)} ---")
 
-# Run validation immediately upon package import
+# Run validation immediately upon config import
 _validate_environment()

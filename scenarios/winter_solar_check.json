@@ -4,7 +4,7 @@
     "steps": [
         {
             "step_id": "market_scout",
-            "agent_key": "flash",
+            "agent_key": "speed",
             "prompt_file": "prompts/solar/scout_panel_specs.md",
             "params": {
                 "location": "Salta, Argentina"
@@ -12,6 +12,7 @@
         },
         {
             "step_id": "engineering_audit",
+            "agent_key": "logic",
             "use_deep_research": true,
             "prompt_file": "prompts/solar/architect_thermal_calc.md",
             "params": {

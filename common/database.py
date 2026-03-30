@@ -13,7 +13,7 @@ from .project_paths import get_project_root
 # --- 1. CONFIGURATION ---
 # Defaulting to a local file in the project root for now.
 # This path can be overridden by a 'CASA_KOLLA_DB_PATH' env variable.
-DEFAULT_DB_NAME = "casa_kolla_management.sqlite"
+from .config import DEFAULT_DB_NAME
 DB_PATH = os.getenv("CASA_KOLLA_DB_PATH", os.path.join(get_project_root(), DEFAULT_DB_NAME))
 
 # --- 2. THE INTERFACE ---

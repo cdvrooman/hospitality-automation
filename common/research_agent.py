@@ -8,6 +8,8 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
+
+
 load_dotenv()
 
 # --- PATH CONFIG ---
@@ -26,15 +28,9 @@ SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
 # Pull the specialized Research Agent ID from the environment
 AGENT_ID = os.getenv("RESEARCH_AGENT_ID")
 
-MODELS = {
-    "flash": "gemini-3-flash-preview", 
-    "pro": "gemini-3.1-pro-preview",
-    "research": "gemini-3.1-pro-preview" # Targeted for Deep Research logic
-}
-
 class ResearchAgent:
-    def __init__(self, model_key="flash"):
-        self.model_key = model_key
+    def __init__(self, model_id):
+        self.model_id = model_id
         self.api_key = self._get_api_key()
         self.client = genai.Client(api_key=self.api_key)
         self.system_instructions = self._load_instructions()
@@ -79,17 +75,20 @@ class ResearchAgent:
         ]
         
         response = self.client.models.count_tokens(
-            model=MODELS[self.model_key],
+            model=self.model_id,
             contents=contents
         )
         return response.total_tokens
 
-    def run_step(self, step_config, context_data=None, is_chained=False):
+    def run_step(self, step_config, context_data=None, is_chained=False, override_model_id=None, override_temp=0.7):
         """
         Loads the template, injects variables, and routes through the dry_run gate.
-        Determines temperature based on model and chain status.
         """
-        self.model_key = step_config.get("agent_key", self.model_key)
+        # Save baseline model and use the override if specified
+        original_model = self.model_id
+        if override_model_id:
+            self.model_id = override_model_id
+            
         template = self._load_prompt_template(step_config['prompt_file'])
         
         params = step_config.get('params', {})
@@ -100,49 +99,54 @@ class ResearchAgent:
         for key, value in params.items():
             final_prompt = final_prompt.replace(f"{{{{{key}}}}}", str(value))
         
-        # Determine Temperature: 0.2 for Pro/Chained logic, 0.7 for discovery
-        temp = 0.2 if (self.model_key in ["pro", "research"] or is_chained) else 0.7
+        use_deep_research = step_config.get('use_deep_research', False)
         
-        return self.dry_run(final_prompt, temperature=temp)
+        # Run execution
+        result = self.dry_run(final_prompt, temperature=override_temp, use_deep_research=use_deep_research)
+        
+        # Restore baseline
+        self.model_id = original_model
+        return result
 
-    def dry_run(self, prompt, temperature=0.7):
+    def dry_run(self, prompt, temperature=0.7, use_deep_research=False):
         """Human-in-the-loop gate to prevent accidental quota depletion."""
         tokens = self.get_token_count(prompt)
         
-        print(f"\n📊 QUOTA CHECK [{self.model_key.upper()}]")
+        print(f"\n📊 QUOTA CHECK [{self.model_id.upper()}]")
         print(f"Total Tokens (with system context): {tokens}")
         print(f"Sampling Temperature: {temperature}")
+        if use_deep_research:
+            print("🧠 Deep Research: ENABLED")
         
         confirm = input("Spend 1 RPD (Request Per Day)? (y/n): ")
         if confirm.lower() == 'y':
-            return self.execute_api_call(prompt, temperature=temperature)
+            return self.execute_api_call(prompt, temperature=temperature, use_deep_research=use_deep_research)
         else:
             print("🚫 Operation cancelled.")
-            return None
+            raise KeyboardInterrupt("User cancelled the prompt")
 
-    def execute_api_call(self, prompt, temperature=0.7, save_to_file=True):
+    def execute_api_call(self, prompt, temperature=0.7, save_to_file=True, use_deep_research=False):
         """Sends the final payload and enables Deep Research thinking where applicable."""
-        print(f"\n🚀 [Casa Kolla Agent] Requesting {self.model_key.upper()}...")
+        print(f"\n🚀 [Casa Kolla Agent] Requesting {self.model_id.upper()}...")
         
-        # Deep Research is enabled via thinking_config for Pro/Research models
         config = types.GenerateContentConfig(
             system_instruction=self.system_instructions,
-            temperature=temperature,
-            thinking_config=types.ThinkingConfig(include_thoughts=True)
+            temperature=temperature
         )
+        if use_deep_research:
+            config.thinking_config = types.ThinkingConfig(include_thoughts=True)
 
         language_anchor = "\n\n[STRICT CONSTRAINT: Provide all output and analysis in English only.]"
         final_prompt = f"{prompt}{language_anchor}"
 
         try:
             response = self.client.models.generate_content(
-                model=MODELS[self.model_key], 
+                model=self.model_id, 
                 contents=final_prompt, 
                 config=config
             )
         except Exception as e:
-            print(f"❌ API ERROR: {e}")
-            return None
+            raise e
 
         content = response.text
         if save_to_file:
@@ -160,7 +164,8 @@ class ResearchAgent:
         safe_title = re.sub(r'_{2,}', '_', safe_title).strip('_')
         
         suffix = "-draft" if is_draft else ""
-        filename = f"{timestamp}_{self.model_key}_{safe_title}{suffix}.md"
+        safe_model = self.model_id.replace("-", "_")
+        filename = f"{timestamp}_{safe_model}_{safe_title}{suffix}.md"
         
         if len(filename) > 250:
             filename = filename[:240] + suffix + ".md"
@@ -171,6 +176,10 @@ class ResearchAgent:
         print(f"💾 Logged: docs/research/{filename}")
 
 if __name__ == "__main__":
-    agent = ResearchAgent(model_key="flash")
+    # If run standalone, import from config locally
+    sys.path.insert(0, str(PROJECT_ROOT / "common"))
+    from config import AI_MODELS, AI_TEMP_PRECISE
+
+    agent = ResearchAgent(model_id=AI_MODELS["logic"])
     # Immediate use of Deep Research for the initial solar scan
-    agent.execute_api_call("Deep Research the specific V_oc temperature coefficients of 450W Longi panels vs Jinko panels.", temperature=0.2)
+    agent.execute_api_call("Deep Research the specific V_oc temperature coefficients of 450W Longi panels vs Jinko panels.", temperature=AI_TEMP_PRECISE, use_deep_research=True)
